@@ -13,4 +13,3 @@ This project has been developed using [Python](https://www.python.org/).
 * **Louis Nelissen** - [15louisn](https://github.com/15louisn)
 * **Pierre-François Weyders** - [Pierre-FrancoisW](https://github.com/Pierre-FrancoisW)
 ```
-
