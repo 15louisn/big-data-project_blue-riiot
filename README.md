@@ -1,6 +1,6 @@
 # Blue Riiot Pool & Spa Assistant
 
-Project realized as part of the course *Big data project* given by **Bertrand Cornélusse**, **Pierre Geurts** and **Gilles Louppe** to graduate data science engineering students at the [University of Liège](https://www.uliege.be/) during the academic year 2019-2020.
+Project realized as part of the course *[Big data project](https://github.com/glouppe/proj0016-big-data-project)* given by **Bertrand Cornélusse**, **Pierre Geurts** and **Gilles Louppe** to graduate data science engineering students at the [University of Liège](https://www.uliege.be/) during the academic year 2019-2020.
 
 ## Languages
 
