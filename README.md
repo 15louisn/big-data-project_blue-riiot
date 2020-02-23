@@ -1,6 +1,6 @@
-# Gas Flow Routing and Network Control
+# Intergrated Master Project
 
-Project realized as part of the course *Big data project* given by **Quentin Louveaux** to graduate data science engineering students at the [University of Liège](https://www.uliege.be/) during the academic year 2019-2020.
+Project realized as part of the course *Big data project* given by **Gille Louppe and Bertrand Cornelusse** to graduate data science engineering students at the [University of Liège](https://www.uliege.be/) during the academic year 2019-2020.
 
 ## Languages
 
