@@ -11,3 +11,7 @@ This project has been developed using [Python](https://www.python.org/).
 * **Baptiste Debes** - [misterguick](https://github.com/misterguick)
 * **Louis Nelissen** - [15louisn](https://github.com/15louisn)
 * **Pierre-François Weyders** - [Pierre-FrancoisW](https://github.com/Pierre-FrancoisW)
+
+##  Dashboard
+
+* [Plan for review 3] https://docs.google.com/document/d/1rHueB1xr8nsXI3wG5fj4R-XwAdxqBXPdVd3q8DvfrxA/edit
