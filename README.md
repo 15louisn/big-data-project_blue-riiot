@@ -14,4 +14,4 @@ This project has been developed using [Python](https://www.python.org/).
 
 ##  Dashboard
 
-* [Plan for review 3] https://docs.google.com/document/d/1rHueB1xr8nsXI3wG5fj4R-XwAdxqBXPdVd3q8DvfrxA/edit
+* [Plan for review 3](https://docs.google.com/document/d/1rHueB1xr8nsXI3wG5fj4R-XwAdxqBXPdVd3q8DvfrxA/edit)
