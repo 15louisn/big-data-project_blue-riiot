@@ -30,18 +30,20 @@ def is_outlier(pred, perc, interval):
 
 
 if __name__ == "__main__":
-    # swp_data = pd.read_csv('reduced_swp.csv')
+    # Implementation of https://www.hindawi.com/journals/mpe/2014/879736/
     event_data = pd.read_csv('reduced_event.csv')
 
     random.seed(0)
 
+    # Select a pool
     event_data = event_data.set_index('blue_device_serial')
     event_data = event_data.loc['000C2925']
-
+    # Select a variable to study
     var_of_interest = "data_conductivity"
     event_data = event_data.reset_index(drop=True)
     time_serie = event_data[["created",var_of_interest]]
 
+    # Convert timestamps
     time_serie.loc[:,"created"] = time_serie["created"].apply(pd.to_datetime)
     time_serie.loc[:,"created"] = time_serie["created"].apply(pd.Timestamp.timestamp)
     # time_serie = time_serie.set_index('created')
