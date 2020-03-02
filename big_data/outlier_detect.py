@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
 import random
 import scipy.stats as stats
+from sklearn import preprocessing
 
 def autoreg(k, array):
     weights = np.arange(1,2*k+1)
@@ -36,10 +37,18 @@ if __name__ == "__main__":
     random.seed(0)
 
     # Select a pool
-    event_data = event_data.set_index('blue_device_serial')
-    event_data = event_data.loc['000C2925']
+    # event_data = event_data.set_index('blue_device_serial')
+    # event_data = event_data.loc['000C2925']
+    #
+    # event_data = event_data.set_index('swimming_pool_id')
+    # event_data = event_data.loc['935af500-6b63-49ae-af29-117ad46d20af']
+
+    event_data = event_data.set_index('swimming_pool_id')
+    event_data = event_data.loc['80210e99-9886-4281-b857-c3075f827258']
+
     # Select a variable to study
-    var_of_interest = "data_conductivity"
+    # var_of_interest = "data_conductivity"
+    var_of_interest = "data_orp"
     event_data = event_data.reset_index(drop=True)
     time_serie = event_data[["created",var_of_interest]]
 
@@ -53,7 +62,7 @@ if __name__ == "__main__":
     # time_serie.plot(y=var_of_interest)
     # plt.show()
 
-    k = 3
+    k = 10
     p = 0.95
     t = 100
     known = time_serie[0:t-1]
@@ -88,8 +97,23 @@ if __name__ == "__main__":
         # print(is_outlier(pred, perc, interval))
 
     # plot_data.plot()
+    p0 = plt.fill_between(plot_data.index.to_numpy(), plot_data['up'].to_numpy(), plot_data['down'].to_numpy(),
+                     color='b', alpha=.5)
+    p1 = plt.plot(plot_data.index.to_numpy(), plot_data['prediction'].to_numpy(),color='b')
+    p2 = plt.plot(plot_data.index.to_numpy(), plot_data['actual value'].to_numpy(),color='r')
+    p3 = plt.fill(np.NaN, np.NaN, 'b', alpha=0.5)
+    plt.xlabel('Timestamp')
+    plt.ylabel('ORP (mV)')
+    plt.legend([(p3[0], p1[0]), p2[0]], ['PCI','Recorded value'], loc='lower right')
+    plt.show()
+
+
+    # plot_data.plot()
     plt.fill_between(plot_data.index.to_numpy()[500:700], plot_data['up'].to_numpy()[500:700], plot_data['down'].to_numpy()[500:700],
                      color='b', alpha=.5)
     plt.plot(plot_data.index.to_numpy()[500:700], plot_data['prediction'].to_numpy()[500:700],color='b')
     plt.plot(plot_data.index.to_numpy()[500:700], plot_data['actual value'].to_numpy()[500:700],color='r')
+    plt.xlabel('Timestamp')
+    plt.ylabel('ORP (mV)')
+    plt.legend([(p3[0], p1[0]), p2[0]], ['PCI','Recorded value'], loc='lower right')
     plt.show()
