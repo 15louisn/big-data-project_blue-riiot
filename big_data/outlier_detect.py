@@ -42,13 +42,14 @@ if __name__ == "__main__":
     #
     # event_data = event_data.set_index('swimming_pool_id')
     # event_data = event_data.loc['935af500-6b63-49ae-af29-117ad46d20af']
-
     event_data = event_data.set_index('swimming_pool_id')
-    event_data = event_data.loc['80210e99-9886-4281-b857-c3075f827258']
+    # event_data = event_data.loc['80210e99-9886-4281-b857-c3075f827258']
+    event_data = event_data.loc['009d1793-0dd1-4e47-a256-0f06a485daf0']
 
     # Select a variable to study
     # var_of_interest = "data_conductivity"
-    var_of_interest = "data_orp"
+    # var_of_interest = "data_orp"
+    var_of_interest = "data_temperature"
     event_data = event_data.reset_index(drop=True)
     time_serie = event_data[["created",var_of_interest]]
 
@@ -62,16 +63,18 @@ if __name__ == "__main__":
     # time_serie.plot(y=var_of_interest)
     # plt.show()
 
-    k = 10
+    k = 50
     p = 0.95
-    t = 100
+    t = 150
     known = time_serie[0:t-1]
+    init = pd.Series(np.zeros(t));
     # print(known)
     k_vals = known[var_of_interest]
     plot_data = pd.concat([k_vals.rename('actual value'),
                            k_vals.rename('prediction'),
                            k_vals.rename('up'),
-                           k_vals.rename('down')], axis=1)
+                           k_vals.rename('down'),
+                           init.rename('outlier')], axis=1)
     # print(plot_data)
 
     for i in range(0,time_serie.shape[0]-t):
@@ -88,13 +91,13 @@ if __name__ == "__main__":
         # Update knowledge for next iteration
         known = known.append(time_serie.loc[t+i], ignore_index=True)
         # print(known)
+        outlier = is_outlier(pred, perc, interval)
 
         # print(perc, pred, pred+interval, pred-interval)
         # Update for plot
-        new_s = pd.Series([perc, pred, pred+interval, pred-interval], index = ['actual value','prediction','up','down'])
+        new_s = pd.Series([perc, pred, pred+interval, pred-interval, outlier], index = ['actual value','prediction','up','down'])
         plot_data = plot_data.append(new_s, ignore_index=True)
         # print(plot_data)
-        # print(is_outlier(pred, perc, interval))
 
     # plot_data.plot()
     p0 = plt.fill_between(plot_data.index.to_numpy(), plot_data['up'].to_numpy(), plot_data['down'].to_numpy(),

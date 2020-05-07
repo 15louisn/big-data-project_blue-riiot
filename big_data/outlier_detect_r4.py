@@ -86,7 +86,7 @@ def threshhold(time_serie, var_of_interest, alpha, use_abs):
     # plt.legend([(p3[0], p1[0]), p2[0]], ['PCI','Recorded value'], loc='lower right')
     # plt.show()
 
-def threshhold_test(time_serie, alpha=0.2, use_abs=False):
+def threshhold_test(time_serie, alpha=0.2, use_abs=True):
     # # Convert timestamps
     # time_serie.loc[:,"created"] = time_serie["created"].apply(pd.to_datetime)
     # time_serie.loc[:,"created"] = time_serie["created"].apply(pd.Timestamp.timestamp)
@@ -105,7 +105,7 @@ def threshhold_test(time_serie, alpha=0.2, use_abs=False):
         if(use_abs):
             up = prev + alpha
             down = prev - alpha
-            outlier = is_outlier(pred, perc, alpha)
+            outlier = is_outlier(prev, perc, alpha)
         else:
             up = (1+alpha)*prev
             down = (1-alpha)*prev
