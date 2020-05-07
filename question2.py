@@ -500,21 +500,328 @@ def calculate_error(predictions):
     print("Absolute error mid ", metrics["absolute_error_mid"].mean())
     print("Absolute error interval ",metrics["absolute_error_interval"].mean())
 
-if __name__ == "__main__":
-    swp_data = load_files()
-    
-    # swp_db = load_files()
-    list(swp_data.columns)
-    swp_data.rename(columns={'Unnamed: 0': 'x'}, inplace=True)
-    # swp_db.rename(columns={'Unnamed: 0': 'x'}, inplace=True)
-    mypool = "f0d1d161-9f96-465a-9900-f13012b481c6"
-    pool = get_pool_data(swp_data, mypool)
-    mypool2 = "2820a378-7ac0-4096-ada4-70350813a2bf"
-    pool2 = get_pool_data(swp_data, mypool2)
-    mypool3 = "80210e99-9886-4281-b857-c3075f827258"
-    pool3 = get_pool_data(swp_data, mypool3)
 
-    mypool4 = "935af500-6b63-49ae-af29-117ad46d20af"
-    pool4 = get_pool_data(swp_data, mypool4)
 
-    # refgression(pool4.data_conductivity)
+def is_outlier(pred, perc, interval):
+    if ((pred > (perc + interval)) or (pred < (perc - interval))):
+        return 1
+    else:
+        return 0
+
+"""
+    Displays plots of the baseline algorithm for anomaly detection.
+
+    Inputs:
+        - time_serie: a set of rows of the events table
+        - var_of_interest: string, either data_ph, data_orp, data_cond
+        - alpha: the parameter of the model
+        - use_abs: boolean, whether or not alpha is used in an absolute fashion
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def threshhold_show(time_serie, var_of_interest, alpha=0.2, use_abs=True):
+    # # Convert timestamps
+    time_serie.loc[:,"created"] = time_serie["created"].apply(pd.to_datetime)
+    time_serie.loc[:,"created"] = time_serie["created"].apply(pd.Timestamp.timestamp)
+
+    first_el = time_serie.iloc[0][var_of_interest]
+    plot_data = pd.DataFrame(columns= ['actual value','prediction','up','down','outlier'])
+    init = pd.Series([first_el,first_el,first_el,first_el,0]);
+    plot_data = plot_data.append(init, ignore_index=True)
+
+    for i in range(1,time_serie.shape[0]):
+        perc = time_serie.loc[i][var_of_interest]
+        prev = time_serie.loc[i-1][var_of_interest]
+
+        if(use_abs):
+            up = prev + alpha
+            down = prev - alpha
+            outlier = is_outlier(pred, perc, alpha)
+        else:
+            up = (1+alpha)*prev
+            down = (1-alpha)*prev
+            outlier = is_outlier(prev, perc, alpha*prev)
+
+        # Update for plot
+        new_s = pd.Series([perc, prev, up, down, outlier],
+                         index = ['actual value','prediction','up','down','outlier'])
+        plot_data = plot_data.append(new_s, ignore_index=True)
+
+    print(plot_data['outlier'].value_counts())
+    # plot_data.plot()
+    outlying_points = time_serie.loc[plot_data['outlier']==1]
+    # print(outlying_points)
+    created = time_serie['created'].to_numpy()
+    # print(time_serie['created'].to_numpy().shape, " ", plot_data.index.to_numpy())
+
+    # p0 = plt.fill_between(created, plot_data['up'].to_numpy(), plot_data['down'].to_numpy(),
+    #                  color='b', alpha=.5)
+    # p4 = plt.scatter(outlying_points['created'].to_numpy(),outlying_points[var_of_interest].to_numpy(), color='g' ,zorder=10)
+    #
+    # p1 = plt.plot(created, plot_data['prediction'].to_numpy(),color='b',zorder=5)
+    pF = plt.plot(created, plot_data['actual value'].to_numpy(),color='b',zorder=1)
+
+    p2 = plt.scatter(created, plot_data['actual value'].to_numpy(),color='r',zorder=5, s=1)
+    # p3 = plt.fill(np.NaN, np.NaN, 'b', alpha=0.5)
+
+    plt.xlabel('Timestamp')
+    plt.ylabel('Conductivity (mS)')
+    plt.ylabel('pH')
+
+    # plt.legend([(p3[0], p1[0]), p2], ['Interval','Recorded value'], loc='upper right')
+    plt.show()
+    # plt.savefig("r4_baseline2.pdf")
+    # # plot_data.plot()
+    # plt.fill_between(created[2400:2850], plot_data['up'].to_numpy()[2400:2850], plot_data['down'].to_numpy()[2400:2850],
+    #                  color='b', alpha=.5)
+    # plt.plot(created[2400:2850], plot_data['prediction'].to_numpy()[2400:2850],color='b')
+    # plt.plot(created[2400:2850], plot_data['actual value'].to_numpy()[2400:2850],color='r')
+    # plt.xlabel('Timestamp')
+    # plt.ylabel('ORP (mV)')
+    # plt.legend([(p3[0], p1[0]), p2[0]], ['PCI','Recorded value'], loc='lower right')
+    # plt.show()
+
+"""
+    Baseline algorithm for anomaly detection.
+
+    Inputs:
+        - time_serie: a set of rows of the events table
+        - alpha: the parameter of the model
+        - use_abs: boolean, whether or not alpha is used in an absolute fashion
+
+    Outputs:
+        - outlier_data: an array of size time_serie with 0s when the algorithm
+            does not detect the point as outlier and 1s where it does
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def threshhold_test(time_serie, alpha=0.2, use_abs=True):
+    time_serie = time_serie.to_numpy()
+    first_el = time_serie[0]
+
+    outlier_data = np.zeros(time_serie.shape[0])
+    outlier_data[0] = 0
+
+    for i in range(1,time_serie.shape[0]):
+        perc = time_serie[i]
+        prev = time_serie[i-1]
+
+        if(use_abs):
+            up = prev + alpha
+            down = prev - alpha
+            outlier = is_outlier(prev, perc, alpha)
+        else:
+            up = (1+alpha)*prev
+            down = (1-alpha)*prev
+            outlier = is_outlier(prev, perc, alpha*prev)
+
+        outlier_data[i] = outlier
+
+    return outlier_data
+
+"""
+    Test the baseline algorithm using a labeled data set
+
+    Inputs:
+        - data_path: path to the labeled files
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def test_baseline(data_path):
+    conf_matrix = np.zeros((2,)*2)
+    files = [f for f in glob.glob(data_path + "*.csv")]
+
+    for filename in files:
+       labeled_data = pd.read_csv(filename)
+       output = threshhold_test(labeled_data[['value']], alpha = 0.2, use_abs = True)
+       conf_matrix += confusion_matrix(labeled_data['label'].to_numpy(), output)
+
+    print(conf_matrix)
+    print(conf_matrix/np.sum(conf_matrix))
+    print("Average missing rate: ", missing_rate.mean())
+
+
+"""
+    Test an algorithm using a labeled data set.
+
+    Inputs:
+        - data_path: path to the labeled files
+
+    Outputs:
+        - fpr: false positive rates
+        - tpr: true positive rates
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def test_model(data_path):
+    conf_matrix = np.zeros((2,)*2)
+    files = [f for f in glob.glob(data_path + "*.csv")]
+
+    truey = []
+    preds = []
+    for filename in files:
+       labeled_data = pd.read_csv(filename)
+
+       labeled = reduce_output(labeled_data[['label']].to_numpy(), filename, data_path)
+       output = PFIsTheBest(labeled, filename)
+
+       conf_matrix += confusion_matrix(labeled, output)
+       truey.append(labeled);
+
+       preds = np.concatenate([preds,output])
+
+    print(conf_matrix)
+
+    truey = [item for sublist in truey for item in sublist]
+
+    lw=2
+    fpr, tpr, thresholds = roc_curve(truey, preds, pos_label=1)
+
+    plotROC(fpr, tpr, thresholds)
+
+    return fpr, tpr
+
+
+"""
+    Tests the baseline algorithm and produces rates to plot roc curve.
+
+    Inputs:
+        - data_path: path to the labeled files
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def testROC(data_path):
+    # params = np.linspace(0, 0.05, num=20)
+    # Nice values
+    params = [0,0.002, 0.004, 0.007, 0.01, 0.02, 0.03, 0.05, 0.1, 0.2, 0.5,1]
+
+    files = [f for f in glob.glob(data_path + "*.csv")]
+    y_test = []
+    for filename in files:
+        y_test.append(pd.read_csv(filename)['label'])
+
+    y_test = [item for sublist in y_test for item in sublist]
+
+    fpr_list, tpr_list, roc_auc = [], [], []
+
+    for param in params:
+        y_pred = []
+        for filename in files:
+            y_pred.append(louis.threshhold_test(pd.read_csv(filename)[['value']], alpha = param, use_abs = True))
+        y_pred = [item for sublist in y_pred for item in sublist]
+        conf_matrix = confusion_matrix(y_test, y_pred)
+
+        TN = conf_matrix[0][0]
+        FN = conf_matrix[1][0]
+        TP = conf_matrix[1][1]
+        FP = conf_matrix[0][1]
+
+        TPR = TP/(TP+FN)
+        FPR = FP/(FP+TN)
+        print("TPR:",TPR)
+        fpr_list.append(FPR)
+        tpr_list.append(TPR)
+
+    plotROC(fpr_list, tpr_list, params)
+
+"""
+    Plots a ROC curve.
+
+    Inputs:
+        - fpr_list: an array containing false positive rates
+        - tpr_list: an array containing true positive rates
+        - params: the parameter setting for every point in the curve
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def plotROC(fpr_list, tpr_list, params):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    print("FPR list: ",fpr_list)
+    lw=2
+    # for fpr, tpr, auc in zip(fpr_list, tpr_list, roc_auc):
+    # plt.scatter(fpr, tpr, color='darkorange', label = 'AUC = %0.2f' % auc)
+    plt.plot(fpr_list, tpr_list, lw=lw, color='darkorange', label = 'ROC Curve')
+    for i in range(0,len(params)):
+        ax.annotate('%s' % params[i], xy=(fpr_list[i],tpr_list[i]), textcoords='data')
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.grid()
+    plt.show()
+
+"""
+    Produces info about the labeled data
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def count():
+    files = [f for f in glob.glob(data_path + "*.csv")]
+    size = 0
+    outliers = 0
+    for filename in files:
+       # print(filename)
+       labeled_data = pd.read_csv(filename)
+       d = labeled_data['label'].to_numpy()
+       size += len(d)
+       outliers += np.sum(d)
+
+    print("Size: ",size)
+    print("Outliers: ", outliers)
+    print("Ratio: ", outliers/size)
+
+
+"""
+    Plots pools for visusalization
+
+    Inputs:
+        - events_data: the reduced events table
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def visusalize(events_data):
+    # events_data = pd.read_csv('reduced_event.csv')
+
+    pool_ranking = events_data['swimming_pool_id'].value_counts().index.values
+
+    events_data = events_data.set_index('swimming_pool_id')
+
+    for i in range(1,5):
+        event_data = events_data.loc[pool_ranking[i]].reset_index(drop=True)
+
+        data = event_data[["created","data_ph","data_temperature","data_orp","data_conductivity"]]
+        datetime_index = pd.DatetimeIndex(data["created"].values)
+        data=data.set_index(datetime_index)
+        pF = data.plot(style='.-')
+        plt.show()
+
+"""
+    Imports a set of predictions and compare with labeled data.
+
+    Inputs:
+        - labeled_data: the labeled data
+        - filename: the file containg the predictions
+
+    Outputs:
+        - new_output: a correct prediction
+
+    Author: Louis Nelissen ; louis.nelissen@student.uliege.be
+"""
+def reduce_output(labeled_data, filename, data_path):
+    s = len(data_path)
+    indexpath = data_path + 'lin_index_ph_' + filename[s+5:s+7] + '.npy'
+    # indexpath = data_path3 + 'index_orp_' + filename[s+5:s+7] + '.npy'
+    print(filename[s+5:s+7])
+    index = np.load(indexpath)
+
+    new_output = np.zeros(int(index.sum()))
+    new_output = []
+    for i in range(len(index)):
+        if index[i] == 1:
+            new_output.append(labeled_data[i][0])
+
+    return new_output
