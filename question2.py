@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 import random
 import pickle as cPickle
 
-from sklearn.metrics import mean_absolute_error
+import os
+import glob
+
+from sklearn.metrics import mean_absolute_error,accuracy_score, confusion_matrix, roc_curve
 
 from statsmodels.tsa.stattools import pacf
 from statsmodels.tsa.stattools import acf
@@ -718,7 +721,7 @@ def testROC(data_path):
 
         TPR = TP/(TP+FN)
         FPR = FP/(FP+TN)
-        print("TPR:",TPR)
+
         fpr_list.append(FPR)
         tpr_list.append(TPR)
 
